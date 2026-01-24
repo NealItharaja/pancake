@@ -25,6 +25,7 @@ class redisClient {
         optional<string> get(const string& key);
         vector<string> keysScan(const string& key, size_t count);
         void update(const string& key, const string& value);
+		void putBatch(const vector<string> &keys, const vector<string> &values);
     private:
         reddisContext* ctx = nullptr;
         redisReply* cmd(const char* fmt, ...);
