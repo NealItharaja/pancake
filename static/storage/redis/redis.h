@@ -9,7 +9,7 @@
 #include <vector>
 #include <optional>
 #include <cstdint>
-#include <hiredis.h>
+#include <hiredis/hiredis.h>
 
 using namespace std;
 
@@ -27,7 +27,7 @@ class redisClient {
         void update(const string& key, const string& value);
 		void putBatch(const vector<string> &keys, const vector<string> &values);
     private:
-        reddisContext* ctx = nullptr;
+        redisContext* ctx = nullptr;
         redisReply* cmd(const char* fmt, ...);
 };
 
