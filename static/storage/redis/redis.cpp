@@ -27,3 +27,22 @@ redisClient::~redisClient() {
         ctx = nullptr;
     }
 }
+
+redisClient::redisClient(redisClient&& other) noexcept {
+    ctx = other.ctx;
+    other.ctx = nullptr;
+}
+
+redisClient& redisClient::operator=(redisClient&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+
+    if (ctx) {
+        redisFree(ctx);
+    }
+
+    ctx = other.ctx;
+    other.ctx = nullptr;
+    return *this;
+}
