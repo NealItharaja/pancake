@@ -7,7 +7,35 @@
 #include <cstring>
 #include <cstdarg>
 
-redisClient::redisClient(const string& host, int port) {
+redis_storage::redis_storage() = default;
+
+redis_storage::~redis_storage() {
+    if (ctx) {
+        redisFree(ctx);
+        ctx = nullptr;
+    }
+}
+
+redis_storage::redis_storage(redis_storage&& other) noexcept {
+    ctx = other.ctx;
+    other.ctx = nullptr;
+}
+
+redis_storage& redis_storage::operator=(redis_storage&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+
+    if (ctx) {
+        redisFree(ctx);
+    }
+
+    ctx = other.ctx;
+    other.ctx = nullptr;
+    return *this;
+}
+
+void redis_storage::connect(const string& host, int port) {
     ctx = redisConnect(host.c_str(), port);
 
     if (!ctx) {
@@ -22,35 +50,13 @@ redisClient::redisClient(const string& host, int port) {
     }
 }
 
-redisClient::~redisClient() {
-    if (ctx) {
-        redisFree(ctx);
-        ctx = nullptr;
-    }
+bool redis_storage::healthy() const {
+    return ctx != nullptr && ctx->err == 0;
 }
 
-redisClient::redisClient(redisClient&& other) noexcept {
-    ctx = other.ctx;
-    other.ctx = nullptr;
-}
-
-redisClient& redisClient::operator=(redisClient&& other) noexcept {
-    if (this == &other) {
-        return *this;
-    }
-
-    if (ctx) {
-        redisFree(ctx);
-    }
-
-    ctx = other.ctx;
-    other.ctx = nullptr;
-    return *this;
-}
-
-redisReply* redisClient::cmd(const char* fmt, ...) {
+redisReply* redis_storage::cmd(const char* fmt, ...) {
     if (!ctx) {
-        throw runtime_error("failed to connect to redis server");
+        throw runtime_error("redis not connected");
     }
 
     va_list args;
@@ -65,7 +71,7 @@ redisReply* redisClient::cmd(const char* fmt, ...) {
     return static_cast<redisReply*>(reply);
 }
 
-void redisClient::put(const string& key, const string& value) {
+void redis_storage::put(const string& key, const string& value) {
     redisReply* reply = cmd("SET %b %b", key.data(), key.size(), value.data(), value.size());
 
     if (reply->type == REDIS_REPLY_ERROR) {
@@ -77,17 +83,15 @@ void redisClient::put(const string& key, const string& value) {
     freeReplyObject(reply);
 }
 
-void redisClient::update(const string& key, const string& value) {
-    put(key, value);
-}
-
-optional<string> redisClient::get(const string& key) {
+optional<string> redis_storage::get(const string& key) {
     redisReply* reply = cmd("GET %b", key.data(), key.size());
 
     if (reply->type == REDIS_REPLY_NIL) {
         freeReplyObject(reply);
         return nullopt;
-    } else if (reply->type != REDIS_REPLY_STRING) {
+    }
+
+    if (reply->type != REDIS_REPLY_STRING) {
         freeReplyObject(reply);
         throw runtime_error("failed to redis get command");
     }
@@ -97,13 +101,49 @@ optional<string> redisClient::get(const string& key) {
     return value;
 }
 
-vector<string> redisClient::keysScan(const string& key, size_t count) {
+vector<optional<string>> redis_storage::get_batch(const vector<string>& keys) {
+    vector<optional<string>> results;
+    results.reserve(keys.size());
+
+    for (const auto& key : keys) {
+        results.emplace_back(get(key));
+    }
+    return results;
+}
+
+void redis_storage::put_batch(const vector<string>& keys, const vector<string>& values) {
+    if (keys.size() != values.size()) {
+        throw runtime_error("key/value vector size mismatch");
+    }
+
+    {
+        redisReply* r = cmd("MULTI");
+        freeReplyObject(r);
+    }
+
+    for (size_t i = 0; i < keys.size(); i++) {
+        redisReply* r = cmd("SET %b %b", keys[i].data(), keys[i].size(), values[i].data(), values[i].size());
+
+        if (r->type == REDIS_REPLY_ERROR) {
+            freeReplyObject(r);
+            throw runtime_error("failed to redis set command");
+        }
+        freeReplyObject(r);
+    }
+
+    {
+        redisReply* r = cmd("EXEC");
+        freeReplyObject(r);
+    }
+}
+
+vector<string> redis_storage::keysScan(const string& key, size_t count) {
     vector<string> result;
     string cursor = "0";
     string pattern = key + "*";
 
     while (true) {
-        redisReply* reply = cmd("SCAN %s MATCH %b COUNT %lu", cursor.c_str(), pattern.data(), pattern.size(), (unsigned long)count);
+		redisReply* reply = cmd("SCAN %s MATCH %b COUNT %lu", cursor.c_str(), pattern.data(), pattern.size(), (unsigned long)count);
 
         if (reply->type != REDIS_REPLY_ARRAY || reply->elements != 2) {
             freeReplyObject(reply);
@@ -137,40 +177,5 @@ vector<string> redisClient::keysScan(const string& key, size_t count) {
     if (result.size() > count) {
         result.resize(count);
     }
-
     return result;
-}
-
-void redisClient::putBatch(const vector<string> &keys, const vector<string> &values) {
-    if (keys.size() != values.size()) {
-        throw runtime_error("key vectors must have the same number of elements");
-    }
-
-    {
-        redisReply* r = cmd("MULTI");
-        if (r->type == REDIS_REPLY_ERROR) {
-            freeReplyObject(r);
-            throw runtime_error("failed to redis multi command");
-        }
-        freeReplyObject(r);
-    }
-
-    for (size_t i = 0; i < keys.size(); i++) {
-        redisReply* r = cmd("SET %b %b", keys[i].data(), keys[i].size(), values[i].data(), values[i].size());
-
-        if (r->type == REDIS_REPLY_ERROR) {
-            freeReplyObject(r);
-            throw runtime_error("failed to redis set command");
-        }
-        freeReplyObject(r);
-    }
-
-    {
-        redisReply* r = cmd("EXEC");
-        if (r->type == REDIS_REPLY_ERROR) {
-            freeReplyObject(r);
-            throw runtime_error("failed to redis exec command");
-        }
-        freeReplyObject(r);
-    }
 }
