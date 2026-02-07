@@ -9,7 +9,7 @@ add_library(pancake_update_cache STATIC
 target_include_directories(pancake_update_cache
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${PROJECT_SOURCE_DIR}/third_party/parallel-hashmap
+        ${PROJECT_SOURCE_DIR}/static/proxy/parallel-hashmap
 )
 
 target_compile_features(pancake_update_cache
