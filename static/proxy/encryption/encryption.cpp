@@ -1,7 +1,3 @@
-//
-// Created by neali on 2/03/2026.
-//
-
 #include "encryption.h"
 #include <cryptopp/base64.h>
 #include <cryptopp/hex.h>

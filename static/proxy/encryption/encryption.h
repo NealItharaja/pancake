@@ -1,7 +1,3 @@
-//
-// Created by neali on 1/24/2026.
-//
-
 #ifndef PANCAKE_ENCRYPTION_H
 #define PANCAKE_ENCRYPTION_H
 
