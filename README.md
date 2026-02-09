@@ -4,3 +4,4 @@ An implementation of the Pancake security system, with both static and dynamic d
 ## Requirements
 - cryptopp
 - redis
+- thrift
