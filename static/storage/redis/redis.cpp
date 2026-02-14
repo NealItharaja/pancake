@@ -179,3 +179,16 @@ vector<string> redis_storage::keysScan(const string& key, size_t count) {
     }
     return result;
 }
+
+bool redis_storage::exists(const string& key) {
+    redisReply* reply = cmd("EXISTS %b", key.data(), key.size());
+
+    if (reply->type != REDIS_REPLY_INTEGER) {
+        freeReplyObject(reply);
+        throw runtime_error("EXISTS command failed");
+    }
+
+    bool exists = (reply->integer == 1);
+    freeReplyObject(reply);
+    return exists;
+}

@@ -29,6 +29,7 @@ public:
     void put_batch(const vector<string>& keys, const vector<string>& values) override;
     bool healthy() const override;
     vector<string> keysScan(const string& key, size_t count);
+    bool exists(const std::string& key) override;
 
 private:
     redisContext* ctx = nullptr;
