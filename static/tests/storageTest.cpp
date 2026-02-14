@@ -26,7 +26,7 @@ static string random_string(size_t length) {
 }
 
 void basic_test(shared_ptr<storage_backend> store) {
-    cout << "Running basic Redis storage test..." << endl;
+    cout << "Running basic storage test..." << endl;
     assert(store->healthy());
     string key = "pancake:key:1";
     string value = "value_1";
@@ -63,7 +63,7 @@ void batch_test(shared_ptr<storage_backend> store, size_t n = 1000) {
 }
 
 void stress_test(shared_ptr<storage_backend> store, size_t operations = 50000) {
-    cout << "Running YCSB-style Redis stress test..." << endl;
+    cout << "Running stress test..." << endl;
     const size_t value_size = 1000;
     vector<string> keys;
     vector<string> values;
@@ -89,7 +89,7 @@ void stress_test(shared_ptr<storage_backend> store, size_t operations = 50000) {
     cout << "Operations: " << operations << endl;
     cout << "Total time: " << duration << " ms" << endl;
     cout << "Throughput: " << (operations * 1000.0 / duration) << " ops/sec" << endl;
-    cout << "YCSB-style stress test passed." << endl;
+    cout << "Stress test passed." << endl;
 }
 
 int main() {
