@@ -24,10 +24,10 @@ include_directories(
 
 # ---- add your actual subprojects ----
 # Your tree: pancake/static/{client,proxy,server,service,storage,thrift}
-add_subdirectory(static/thrift)
-add_subdirectory(static/storage)
-add_subdirectory(static/service)
-add_subdirectory(static/proxy)
-add_subdirectory(static/client)
-add_subdirectory(static/server)
+add_subdirectory(thrift)
+add_subdirectory(storage)
+add_subdirectory(service)
+add_subdirectory(proxy)
+add_subdirectory(client)
+add_subdirectory(server)
 add_executable(new_target build.sh)
