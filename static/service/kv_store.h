@@ -1,5 +1,3 @@
-
-
 #ifndef KV_STORE_H
 #define KV_STORE_H
 #pragma once

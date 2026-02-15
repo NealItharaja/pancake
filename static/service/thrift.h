@@ -1,15 +1,13 @@
 #ifndef THRIFT_H
 #define THRIFT_H
-#pragma once
 
+#pragma once
 #include <thrift/TDispatchProcessor.h>
 #include <thrift/TApplicationException.h>
-
 #include <map>
 #include <string>
 #include <vector>
 #include <cstdint>
-
 #include "proxy_types.h"
 
 class pancake_thriftIf {

@@ -1,5 +1,6 @@
 #ifndef THRIFT_HELPERS_H
 #define THRIFT_HELPERS_H
+
 #pragma once
 #include <memory>
 #include <string>
@@ -13,6 +14,7 @@
 #include <thrift/server/TThreadedServer.h>
 #include <thrift/concurrency/ThreadManager.h>
 #include <thrift/concurrency/PosixThreadFactory.h>
+
 namespace thrift_helpers {
 inline void make_framed_binary_client(
     const std::string& host,

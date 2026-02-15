@@ -2,7 +2,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
 #include <thrift/server/TThreadedServer.h>
 #include "kv_store.h"
 #include "thrift_helpers.h"

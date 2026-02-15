@@ -1,5 +1,5 @@
-#include "../storage/redis/redis.h"
-#include "../storage/interface.h"
+#include "redis/redis.h"
+#include "interface.h"
 #include <iostream>
 #include <cassert>
 #include <random>

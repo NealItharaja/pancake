@@ -15,9 +15,9 @@
 #include <chrono>
 #include <cstring>
 #include "timer.h"
-#include "../proxy/distribution/distribution.h"
-#include "../client/asyncClient/async_client.h"
-#include "../service/thrift_utils.h"
+#include "distribution.h"
+#include "async_client.h"
+//#include "../service/thrift_utils.h"
 
 typedef std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> trace_vector;
 

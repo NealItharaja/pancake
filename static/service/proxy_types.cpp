@@ -1,4 +1,5 @@
 #include "proxy_types.h"
+
 uint32_t sequence_id::read(::apache::thrift::protocol::TProtocol* iprot) {
     uint32_t xfer = 0;
     std::string fname;

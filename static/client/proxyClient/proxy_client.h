@@ -7,7 +7,7 @@
 #include <thrift/transport/TTransportUtils.h>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include "client.h"
-#include "pancake_thrift.h"
+#include "../../thrift/pancake.thrift"
 
 class proxy_client final : public client {
 public:

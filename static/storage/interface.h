@@ -1,9 +1,9 @@
-//
-// Created by neali on 1/25/2026.
-//
-
 #ifndef PANCAKE_STORAGE_BACKEND_H
 #define PANCAKE_STORAGE_BACKEND_H
+
+#include <optional>
+#include <vector>
+#include <string>
 
 class storage_backend {
 public:

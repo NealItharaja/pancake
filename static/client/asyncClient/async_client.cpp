@@ -1,4 +1,6 @@
 #include "async_client.h"
+#include <thrift/...>
+#include <pthread.h>
 
 using apache::thrift::protocol::TBinaryProtocol;
 using apache::thrift::transport::TSocket;

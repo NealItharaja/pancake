@@ -1,6 +1,7 @@
-#include "update_cache.h"
+#include "updateCache.h"
 #include <algorithm>
 #include <limits>
+#include <mutex>
 
 thread_local std::mt19937 update_cache::rng_(std::random_device{}());
 

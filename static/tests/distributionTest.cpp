@@ -2,7 +2,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include "../proxy/distribution/distribution.h"
+#include "distribution.h"
 
 void run_test() Modif{
     std::cout << "Running distribution test\n";

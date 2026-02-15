@@ -5,14 +5,14 @@
 #include <vector>
 #include <memory>
 #include <future>
-#include "proxy.h"
-#include "operation.h"
-#include "distribution.h"
-#include "update_cache.h"
-#include "queue.h"
-#include "util.h"
-#include "encryption_engine.h"
-#include "storage_interface.h"
+#include "../proxy.h"
+#include "../operation/operation.h"
+#include "../distribution/distribution.h"
+#include "../updateCache/updateCache.h"
+#include "../queue/queue.h"
+#include "../util/random.h"
+#include "../encryption/encryption.h"
+#include "../../storage/interface.h"
 
 class pancake_proxy : public proxy {
 public:

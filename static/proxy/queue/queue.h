@@ -1,7 +1,6 @@
 #ifndef PANCAKE__H
 #define PANCAKE__H
 
-#include <>
 #include <string>
 #include <mutex>
 #include <condition_variable>
