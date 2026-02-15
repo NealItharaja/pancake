@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Absolute path to project root (where build.sh lives)
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${ROOT_DIR}/cmakebuild"
 
@@ -13,7 +14,14 @@ cmake -S "${ROOT_DIR}/static" -B "${BUILD_DIR}"
 START=$(date +%s)
 
 echo "[*] Building Pancake"
-cmake --build "${BUILD_DIR}" -j"$(sysctl -n hw.ncpu)"
+# Use nproc on Linux, sysctl on macOS
+if command -v nproc >/dev/null 2>&1; then
+    JOBS=$(nproc)
+else
+    JOBS=$(sysctl -n hw.ncpu)
+fi
+
+cmake --build "${BUILD_DIR}" -j"${JOBS}"
 
 END=$(date +%s)
 

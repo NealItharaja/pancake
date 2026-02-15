@@ -1,41 +1,42 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 project(pancake LANGUAGES CXX)
 
-# --------------------
+# ============================================================
 # C++ standard
-# --------------------
+# ============================================================
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# --------------------
+# ============================================================
 # Prevent in-source builds
-# --------------------
+# ============================================================
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
     message(FATAL_ERROR "In-source builds are not allowed. Use a build directory.")
 endif()
 
-# --------------------
+# ============================================================
 # Output directories
-# --------------------
+# ============================================================
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-# --------------------
+# ============================================================
 # Dependencies
-# --------------------
+# ============================================================
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(THRIFT REQUIRED thrift)
 pkg_check_modules(HIREDIS REQUIRED hiredis)
 
+# Crypto++ (Ubuntu + macOS safe)
 find_library(CRYPTOPP_LIB cryptopp REQUIRED)
 
-# --------------------
+# ============================================================
 # Include directories (project)
-# --------------------
+# ============================================================
 set(PROXY_INCLUDE
         ${CMAKE_SOURCE_DIR}/proxy/updateCache
         ${CMAKE_SOURCE_DIR}/proxy/queue
@@ -63,17 +64,17 @@ set(TEST_INCLUDE
         ${CMAKE_SOURCE_DIR}/tests
 )
 
-# --------------------
+# ============================================================
 # Source files
-# --------------------
-file(GLOB_RECURSE PROXY_SOURCES   proxy/*.cpp)
-file(GLOB_RECURSE CLIENT_SOURCES  client/*.cpp)
-file(GLOB_RECURSE SERVICE_SOURCES service/*.cpp)
-file(GLOB_RECURSE SERVER_SOURCES  server/*.cpp)
+# ============================================================
+file(GLOB_RECURSE PROXY_SOURCES   CONFIGURE_DEPENDS proxy/*.cpp)
+file(GLOB_RECURSE CLIENT_SOURCES  CONFIGURE_DEPENDS client/*.cpp)
+file(GLOB_RECURSE SERVICE_SOURCES CONFIGURE_DEPENDS service/*.cpp)
+file(GLOB_RECURSE SERVER_SOURCES  CONFIGURE_DEPENDS server/*.cpp)
 
-# --------------------
-# Common include dirs for all targets
-# --------------------
+# ============================================================
+# Common include dirs
+# ============================================================
 set(COMMON_INCLUDES
         ${PROXY_INCLUDE}
         ${STORAGE_INCLUDE}
@@ -81,12 +82,11 @@ set(COMMON_INCLUDES
         ${SERVICE_INCLUDE}
         ${THRIFT_INCLUDE_DIRS}
         ${HIREDIS_INCLUDE_DIRS}
-        /opt/homebrew/include          # Crypto++ headers on Apple Silicon
 )
 
-# --------------------
+# ============================================================
 # Common libraries
-# --------------------
+# ============================================================
 set(COMMON_LIBS
         Threads::Threads
         ${THRIFT_LIBRARIES}
@@ -94,9 +94,9 @@ set(COMMON_LIBS
         ${CRYPTOPP_LIB}
 )
 
-# --------------------
+# ============================================================
 # Compile options
-# --------------------
+# ============================================================
 add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 
 # ============================================================
@@ -153,9 +153,9 @@ macro(add_pancake_test target_name test_source)
     )
 endmacro()
 
-# --------------------
+# ============================================================
 # Tests
-# --------------------
+# ============================================================
 add_pancake_test(distribution_test tests/distributionTest.cpp)
 add_pancake_test(update_cache_test tests/updateCacheTest.cpp)
 add_pancake_test(storage_test tests/storageTest.cpp)
