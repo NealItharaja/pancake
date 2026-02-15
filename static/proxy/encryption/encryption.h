@@ -1,7 +1,7 @@
 #ifndef PANCAKE_ENCRYPTION_H
 #define PANCAKE_ENCRYPTION_H
 
-#includ <string>
+#include <string>
 #include <vector>
 #include <cryptopp/hmac.h>
 #include <cryptopp/sha.h>
