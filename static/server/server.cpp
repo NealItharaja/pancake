@@ -8,7 +8,9 @@
 #include <unistd.h>
 #include "distribution.h"
 #include "pancake_proxy.h"
-#include "../service/thrift_server.h"
+#include "../service/thrift.h"
+#include "../service/thrift_helpers.h"
+#include "../service/proxy_types.h"
 #include "thrift_utils.h"
 
 #define HOST "127.0.0.1"
