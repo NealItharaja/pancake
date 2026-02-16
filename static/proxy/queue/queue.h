@@ -1,28 +1,45 @@
-#ifndef PANCAKE__H
-#define PANCAKE__H
+#ifndef PANCAKE_QUEUE_H
+#define PANCAKE_QUEUE_H
 
+#include <queue>
 #include <string>
 #include <mutex>
-#include <condition_variable>
-#include <atomic>
+#include <optional>
 
 class queue {
 public:
-    queue();
-    ~queue();
-    queue(const queue&) = delete;
-    queue& operator=(const queue&) = delete;
-    void push(std::string item);
-    bool pop(std::string& out);
-    void shutdown();
-    size_t size() const;
-    bool is_closed() const;
+    queue() = default;
+
+    // push a value into the queue
+    void push(const std::string& value) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        data_.push(value);
+    }
+
+    // pop a value from the queue
+    std::optional<std::string> pop() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (data_.empty()) {
+            return std::nullopt;
+        }
+        std::string value = data_.front();
+        data_.pop();
+        return value;
+    }
+
+    bool empty() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return data_.empty();
+    }
+
+    size_t size() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return data_.size();
+    }
 
 private:
-    std::<std::string>;
+    std::queue<std::string> data_;
     mutable std::mutex mutex_;
-    std::condition_variable cv_;
-    std::atomic<bool> closed_{false};
 };
 
-#endif //PANCAKE__H
+#endif // PANCAKE_QUEUE_H
