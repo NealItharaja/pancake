@@ -11,7 +11,8 @@
 #include "../service/thrift.h"
 #include "../service/thrift_helpers.h"
 #include "../service/proxy_types.h"
-#include "thrift_utils.h"
+#include "../service/thrift_helpers.h"
+
 
 #define HOST "127.0.0.1"
 #define PROXY_PORT 9090
