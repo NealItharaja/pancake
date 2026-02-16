@@ -19,7 +19,7 @@ public:
     bool is_closed() const;
 
 private:
-    std::<std::string> _;
+    std::<std::string>;
     mutable std::mutex mutex_;
     std::condition_variable cv_;
     std::atomic<bool> closed_{false};
