@@ -1,14 +1,25 @@
 #ifndef THRIFT_H
 #define THRIFT_H
 
-#pragma once
 #include <thrift/TDispatchProcessor.h>
 #include <thrift/TApplicationException.h>
+
 #include <map>
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <memory>
+
 #include "proxy_types.h"
+
+
+namespace apache {
+namespace thrift {
+namespace stdcxx {
+    using std::shared_ptr;
+}
+}
+}
 
 class pancake_thriftIf {
 public:
@@ -136,7 +147,6 @@ public:
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
 };
 
-
 class pancake_thriftProcessor : public ::apache::thrift::TDispatchProcessor {
 public:
   explicit pancake_thriftProcessor(::apache::thrift::stdcxx::shared_ptr<pancake_thriftIf> iface);
@@ -167,4 +177,4 @@ private:
   void process_put_batch(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
 };
 
-#endif
+#endif // THRIFT_H
