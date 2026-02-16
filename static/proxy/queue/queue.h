@@ -4,42 +4,34 @@
 #include <queue>
 #include <string>
 #include <mutex>
-#include <optional>
+#include <condition_variable>
 
 class queue {
 public:
-    queue() = default;
+    queue();
+    ~queue();
 
-    // push a value into the queue
-    void push(const std::string& value) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        data_.push(value);
-    }
+    // Push an item into the queue
+    void push(std::string item);
 
-    // pop a value from the queue
-    std::optional<std::string> pop() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (data_.empty()) {
-            return std::nullopt;
-        }
-        std::string value = data_.front();
-        data_.pop();
-        return value;
-    }
+    // Pop an item; blocks until item available or queue is closed
+    // Returns false if the queue is closed and empty
+    bool pop(std::string& out);
 
-    bool empty() const {
-        std::lock_guard<std::mutex> lock(mutex_);
-        return data_.empty();
-    }
+    // Close the queue and wake all waiting threads
+    void shutdown();
 
-    size_t size() const {
-        std::lock_guard<std::mutex> lock(mutex_);
-        return data_.size();
-    }
+    // Number of items currently in the queue
+    size_t size() const;
+
+    // Whether shutdown() has been called
+    bool is_closed() const;
 
 private:
-    std::queue<std::string> data_;
+    std::queue<std::string> queue_;
     mutable std::mutex mutex_;
+    std::condition_variable cv_;
+    bool closed_ = false;
 };
 
 #endif // PANCAKE_QUEUE_H
