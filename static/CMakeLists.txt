@@ -84,6 +84,7 @@ file(GLOB_RECURSE PROXY_SOURCES proxy/*.cpp)
 file(GLOB_RECURSE CLIENT_SOURCES client/*.cpp)
 file(GLOB_RECURSE SERVICE_SOURCES service/*.cpp)
 file(GLOB_RECURSE SERVER_SOURCES server/*.cpp)
+file(GLOB_RECURSE STORAGE_SOURCES storage/*.cpp)
 file(GLOB_RECURSE TEST_SOURCES tests/*.cpp)
 
 add_executable(pancake_proxy_server
@@ -136,7 +137,12 @@ if (PANCAKE_BUILD_BENCHMARK)
 endif()
 
 macro(add_pancake_test target_name test_source)
-    add_executable(${target_name} ${test_source} ${PROXY_SOURCES})
+    add_executable(${target_name}
+            ${test_source}
+            ${PROXY_SOURCES}
+            ${SERVICE_SOURCES}
+            ${STORAGE_SOURCES}
+    )
     target_include_directories(${target_name} PRIVATE
             ${PROXY_INCLUDE}
             ${STORAGE_INCLUDE}
@@ -145,7 +151,12 @@ macro(add_pancake_test target_name test_source)
             ${TEST_INCLUDE}
             ${THRIFT_GEN_DIR}
     )
-    target_link_libraries(${target_name} PRIVATE Threads::Threads ${CRYPTOPP_LIB})
+    target_link_libraries(${target_name} PRIVATE
+            Threads::Threads
+            ${CRYPTOPP_LIB}
+            ${THRIFT_LIBRARIES}
+            ${HIREDIS_LIBRARIES}
+    )
     add_dependencies(${target_name} pancake_thrift_codegen)
 endmacro()
 
