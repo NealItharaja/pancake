@@ -4,7 +4,7 @@
 #include <vector>
 #include "distribution.h"
 
-void run_test() Modif{
+void run_test() {
     std::cout << "Running distribution test\n";
     const size_t N = 1'000'000;
     const double theta = 0.99;

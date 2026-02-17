@@ -16,13 +16,11 @@ void pancake_proxy::init(const std::vector<std::string> &keys, const std::vector
 
 void pancake_proxy::close() {
     finished_ = true;
-    if (storage_interface_) {
-        storage_interface_->close();
-    }
 }
 
 std::string pancake_proxy::get(const std::string &key) {
-    return storage_interface_->get(key);
+    auto result = storage_interface_->get(key);
+    return result ? *result : std::string{};
 }
 
 void pancake_proxy::put(const std::string &key, const std::string &value) {
@@ -30,12 +28,13 @@ void pancake_proxy::put(const std::string &key, const std::string &value) {
 }
 
 std::vector<std::string> pancake_proxy::get_batch(const std::vector<std::string> &keys) {
-    std::vector<std::string> results;
-    results.reserve(keys.size());
-    for (const auto &k : keys) {
-        results.push_back(storage_interface_->get(k));
+    auto results = storage_interface_->get_batch(keys);
+    std::vector<std::string> out;
+    out.reserve(results.size());
+    for (const auto &r : results) {
+        out.push_back(r ? *r : std::string{});
     }
-    return results;
+    return out;
 }
 
 void pancake_proxy::put_batch(const std::vector<std::string> &keys, const std::vector<std::string> &values) {
@@ -56,7 +55,7 @@ std::vector<std::string> pancake_proxy::get_batch(int, const std::vector<std::st
     return get_batch(keys);
 }
 
-void pancake_proxy::put_batch(const std::vector<std::string> &keys, const std::vector<std::string> &values) {
+void pancake_proxy::put_batch(int, const std::vector<std::string> &keys, const std::vector<std::string> &values) {
     put_batch(keys, values);
 }
 

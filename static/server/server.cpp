@@ -15,15 +15,15 @@
 
 #include "distribution.h"
 #include "pancake_proxy.h"
-#include "thrift_server.h"
-#include "thrift_utils.h"
+#include "../proxy/thrift_server.h"
+#include "../service/thrift_utils.h"
 
 #define HOST "127.0.0.1"
 #define PROXY_PORT 9090
 
 using trace_vector = std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>;
 
-distribution load_trace(const std::string& trace_path, trace_vector& trace, int batch_size) {
+Distribution load_trace(const std::string& trace_path, trace_vector& trace, int batch_size) {
     phmap::flat_hash_map<std::string, int> freq;
     int total = 0;
     std::ifstream in(trace_path);
@@ -83,7 +83,7 @@ distribution load_trace(const std::string& trace_path, trace_vector& trace, int 
         keys.push_back(k);
         weights.push_back(static_cast<double>(v) / total);
     }
-    return distribution(keys, weights);
+    return Distribution(keys, weights);
 }
 
 

@@ -12,8 +12,6 @@
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/server/TThreadedServer.h>
-#include <thrift/concurrency/ThreadManager.h>
-#include <thrift/concurrency/PosixThreadFactory.h>
 
 namespace thrift_helpers {
 inline void make_framed_binary_client(
@@ -53,17 +51,13 @@ make_binary_factory() {
   #include <cryptopp/sha.h>
   #include <cryptopp/hex.h>
   #include <cryptopp/filters.h>
-inline std::string sha256_hex(const std::string& input) {
-  using namespace CryptoPP;
-  SHA256 hash;
-  std::string digest;
-  StringSource ss(input, true,
-    new HashFilter(hash,
-      new HexEncoder(new StringSink(digest), false /*uppercase*/)
-    )
-  );
-  return digest;
-}
-#endif
+  inline std::string sha256_hex(const std::string& input) {
+    using namespace CryptoPP;
+    SHA256 hash;
+    std::string digest;
+    StringSource ss(input, true, new HashFilter(hash, new HexEncoder(new StringSink(digest), false)));
+    return digest;
+  }
+  #endif
 }
 #endif

@@ -48,7 +48,7 @@ string encryption_engine::decrypt(const string& cipher_text) {
         throw runtime_error("ciphertext too short");
     }
 
-    SecByteBlock iv(reinterpret_cast<const byte*>(decoded.data()), AES::BLOCKSIZE);
+    SecByteBlock iv(reinterpret_cast<const CryptoPP::byte*>(decoded.data()), AES::BLOCKSIZE);
     string cipher = decoded.substr(AES::BLOCKSIZE);
     string recovered;
     CBC_Mode<AES>::Decryption dec;
