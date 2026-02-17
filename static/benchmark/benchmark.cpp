@@ -16,7 +16,7 @@
 #include <cstring>
 #include "timer.h"
 #include "distribution.h"
-#include "async_client.h"
+#include "proxy_client.h"
 #include "../service/thrift_utils.h"
 
 typedef std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> trace_vector;
@@ -77,7 +77,7 @@ static void load_trace(const std::string& trace_location, trace_vector& trace, i
     std::cout << "Loaded " << trace.size() << " batched operations." << std::endl;
 }
 
-static void run_benchmark(int runtime_seconds, bool collect_stats, std::vector<uint64_t>& latencies_ns, int batch_size, const trace_vector& trace, std::atomic<uint64_t>& throughput, async_proxy_client& client) {
+static void run_benchmark(int runtime_seconds, bool collect_stats, std::vector<uint64_t>& latencies_ns, int batch_size, const trace_vector& trace, std::atomic<uint64_t>& throughput, proxy_client& client) {
     using clock = std::chrono::steady_clock;
     const auto start_time = clock::now();
     const auto end_time   = start_time + std::chrono::seconds(runtime_seconds);
@@ -109,20 +109,20 @@ static void run_benchmark(int runtime_seconds, bool collect_stats, std::vector<u
     }
 }
 
-static void warmup(int batch_size, const trace_vector& trace, async_proxy_client& client) {
+static void warmup(int batch_size, const trace_vector& trace, proxy_client& client) {
     std::vector<uint64_t> dummy;
     std::atomic<uint64_t> xput{0};
     run_benchmark(10, false, dummy, batch_size, trace, xput, client);
 }
 
-static void cooldown(int batch_size, const trace_vector& trace, async_proxy_client& client) {
+static void cooldown(int batch_size, const trace_vector& trace, proxy_client& client) {
     std::vector<uint64_t> dummy;
     std::atomic<uint64_t> xput{0};
     run_benchmark(5, false, dummy, batch_size, trace, xput, client);
 }
 
 static void benchmark_client(int client_id, int batch_size, const trace_vector& trace, const std::string& output_dir, const std::string& host, int port, std::atomic<uint64_t>& total_xput) {
-    async_proxy_client client;
+    proxy_client client;
     client.init(host, port);
     std::cout << "Client " << client_id << " connected to proxy." << std::endl;
     warmup(batch_size, trace, client);
@@ -141,7 +141,6 @@ static void benchmark_client(int client_id, int batch_size, const trace_vector& 
     out.close();
     total_xput += client_xput.load();
     cooldown(batch_size, trace, client);
-    client.finish();
     std::cout << "Client " << client_id << " finished." << std::endl;
 }
 

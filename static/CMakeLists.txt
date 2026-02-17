@@ -29,8 +29,6 @@ add_custom_command(
         OUTPUT
             "${THRIFT_GEN_DIR}/pancake_types.h"
             "${THRIFT_GEN_DIR}/pancake_types.cpp"
-            "${THRIFT_GEN_DIR}/pancake_constants.h"
-            "${THRIFT_GEN_DIR}/pancake_constants.cpp"
             "${THRIFT_GEN_DIR}/pancake_thrift.h"
             "${THRIFT_GEN_DIR}/pancake_thrift.cpp"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${THRIFT_GEN_DIR}"
@@ -44,8 +42,6 @@ add_custom_target(pancake_thrift_codegen ALL
         DEPENDS
             "${THRIFT_GEN_DIR}/pancake_types.h"
             "${THRIFT_GEN_DIR}/pancake_types.cpp"
-            "${THRIFT_GEN_DIR}/pancake_constants.h"
-            "${THRIFT_GEN_DIR}/pancake_constants.cpp"
             "${THRIFT_GEN_DIR}/pancake_thrift.h"
             "${THRIFT_GEN_DIR}/pancake_thrift.cpp"
 )
@@ -87,10 +83,18 @@ file(GLOB_RECURSE SERVER_SOURCES server/*.cpp)
 file(GLOB_RECURSE STORAGE_SOURCES storage/*.cpp)
 file(GLOB_RECURSE TEST_SOURCES tests/*.cpp)
 
+# proxy_server.cpp is a standalone executable entrypoint (has main()).
+# Keep it out of shared source lists to avoid multiple-definition of main.
+set(SERVICE_STANDALONE_SOURCES
+        ${CMAKE_SOURCE_DIR}/service/proxy_server.cpp
+)
+list(REMOVE_ITEM SERVICE_SOURCES ${SERVICE_STANDALONE_SOURCES})
+
 add_executable(pancake_proxy_server
         ${PROXY_SOURCES}
         ${SERVICE_SOURCES}
         ${SERVER_SOURCES}
+        ${STORAGE_SOURCES}
 )
 
 target_include_directories(pancake_proxy_server PRIVATE
@@ -109,11 +113,34 @@ target_link_libraries(pancake_proxy_server PRIVATE
         ${CRYPTOPP_LIB}
 )
 
+# Optional standalone service executable
+option(PANCAKE_BUILD_SERVICE_PROXY_SERVER "Build standalone service/proxy_server.cpp executable" OFF)
+if (PANCAKE_BUILD_SERVICE_PROXY_SERVER)
+    add_executable(pancake_service_proxy_server
+            ${SERVICE_STANDALONE_SOURCES}
+            ${SERVICE_SOURCES}
+    )
+    target_include_directories(pancake_service_proxy_server PRIVATE
+            ${SERVICE_INCLUDE}
+            ${PROXY_INCLUDE}
+            ${STORAGE_INCLUDE}
+            ${CLIENT_INCLUDE}
+            ${THRIFT_GEN_DIR}
+    )
+    target_link_libraries(pancake_service_proxy_server PRIVATE
+            Threads::Threads
+            ${THRIFT_LIBRARIES}
+            ${HIREDIS_LIBRARIES}
+            ${CRYPTOPP_LIB}
+    )
+    add_dependencies(pancake_service_proxy_server pancake_thrift_codegen)
+endif()
+
 option(PANCAKE_BUILD_BENCHMARK "Build benchmark target" OFF)
 if (PANCAKE_BUILD_BENCHMARK)
     add_executable(benchmark
             benchmark/benchmark.cpp
-            ${CLIENT_SOURCES}
+            client/proxyClient/proxy_client.cpp
     )
 
     target_include_directories(benchmark PRIVATE
@@ -130,7 +157,6 @@ if (PANCAKE_BUILD_BENCHMARK)
     )
     target_sources(benchmark PRIVATE
             "${THRIFT_GEN_DIR}/pancake_types.cpp"
-            "${THRIFT_GEN_DIR}/pancake_constants.cpp"
             "${THRIFT_GEN_DIR}/pancake_thrift.cpp"
     )
     add_dependencies(benchmark pancake_thrift_codegen)

@@ -1,12 +1,19 @@
 #include "pancake_proxy.h"
 #include <parallel_hashmap/phmap.h>
 #include <stdexcept>
+#include "../../storage/redis/redis.h"
 
 void pancake_proxy::init(const std::vector<std::string> &keys, const std::vector<std::string> &values, void **args) {
     finished_ = false;
 
     if (!storage_interface_) {
-        throw std::runtime_error("storage_interface not initialized");
+        if (server_type_.empty() || server_type_ == "redis") {
+            auto redis = std::make_shared<redis_storage>();
+            redis->connect("127.0.0.1", 6379);
+            storage_interface_ = redis;
+        } else {
+            throw std::runtime_error("unsupported backend type: " + server_type_);
+        }
     }
 
     for (size_t i = 0; i < keys.size(); ++i) {
