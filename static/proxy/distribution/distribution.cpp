@@ -66,3 +66,7 @@ const std::string& Distribution::pick() {
 size_t Distribution::size() const noexcept {
     return values_.size();
 }
+
+const std::vector<std::string>& Distribution::get_items() const noexcept {
+    return values_;
+}

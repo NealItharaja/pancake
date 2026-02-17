@@ -9,6 +9,7 @@ public:
     Distribution(const std::vector<std::string>& values, double theta);
     const std::string& pick();
     size_t size() const noexcept;
+    const std::vector<std::string>& get_items() const noexcept;
 
 private:
     std::vector<std::string> values_;

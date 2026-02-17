@@ -49,8 +49,8 @@ public:
 private:
     std::shared_ptr<storage_backend> storage_interface_;
     update_cache update_cache_;
-    Distribution real_distribution_;
-    Distribution fake_distribution_;
+    std::unique_ptr<Distribution> real_distribution_;
+    std::unique_ptr<Distribution> fake_distribution_;
     encryption_engine encryption_engine_;
     bool finished_ = false;
 };
