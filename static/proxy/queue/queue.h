@@ -2,6 +2,7 @@
 #define PANCAKE__H
 
 #include <string>
+#include <queue>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
@@ -19,7 +20,7 @@ public:
     bool is_closed() const;
 
 private:
-    std::<std::string> _;
+    std::queue<std::string> queue_;
     mutable std::mutex mutex_;
     std::condition_variable cv_;
     std::atomic<bool> closed_{false};

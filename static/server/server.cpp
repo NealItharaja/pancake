@@ -1,11 +1,18 @@
-#include <phmap.h>
+#include <parallel_hashmap/phmap.h>
 #include <atomic>
 #include <cassert>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <thread>
+
+#ifdef _WIN32
+#include <windows.h>
+#define usleep(x) Sleep((x) / 1000)
+#else
 #include <unistd.h>
+#endif
+
 #include "distribution.h"
 #include "pancake_proxy.h"
 #include "thrift_server.h"

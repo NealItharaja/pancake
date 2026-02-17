@@ -370,7 +370,7 @@ uint32_t pancake_thrift_get_batch_result::write(::apache::thrift::protocol::TPro
   xfer += oprot->writeStructEnd();
   return xfer;
 }
-pancake_thriftProcessor::pancake_thriftProcessor(::apache::thrift::stdcxx::shared_ptr<pancake_thriftIf> iface)
+pancake_thriftProcessor::pancake_thriftProcessor(std::shared_ptr<pancake_thriftIf> iface)
   : iface_(iface) {
   processMap_["get_client_id"] = &pancake_thriftProcessor::process_get_client_id;
   processMap_["register_client_id"] = &pancake_thriftProcessor::process_register_client_id;

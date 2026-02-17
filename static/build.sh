@@ -15,7 +15,13 @@ cmake "$@" "${ROOT_DIR}"
 START=$(date +%s)
 
 echo "[*] Building Pancake"
-make -j"$(nproc)"
+if command -v nproc > /dev/null 2>&1; then
+    make -j"$(nproc)"
+elif command -v sysctl > /dev/null 2>&1; then
+    make -j"$(sysctl -n hw.ncpu)"
+else
+    make -j4
+fi
 
 END=$(date +%s)
 

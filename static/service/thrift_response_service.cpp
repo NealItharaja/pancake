@@ -2,9 +2,6 @@
 #include <thrift/transport/TTransport.h>
 #include <thrift/protocol/TProtocol.h>
 
-pancake_thrift_response_async_response_args::~pancake_thrift_response_async_response_args() throw() {}
-pancake_thrift_response_async_response_pargs::~pancake_thrift_response_async_response_pargs() throw() {}
-
 uint32_t pancake_thrift_response_async_response_args::read(::apache::thrift::protocol::TProtocol* iprot) {
     uint32_t xfer = 0;
     std::string fname;

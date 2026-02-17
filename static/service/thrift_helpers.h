@@ -48,7 +48,7 @@ make_binary_factory() {
   using namespace apache::thrift::protocol;
   return std::make_shared<TBinaryProtocolFactory>();
 }
-}
+
 #ifdef HAS_CRYPTOPP
   #include <cryptopp/sha.h>
   #include <cryptopp/hex.h>
@@ -65,4 +65,5 @@ inline std::string sha256_hex(const std::string& input) {
   return digest;
 }
 #endif
+}
 #endif

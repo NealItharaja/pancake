@@ -5,6 +5,7 @@
 #include <thrift/TDispatchProcessor.h>
 #include <thrift/TApplicationException.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -139,7 +140,7 @@ public:
 
 class pancake_thriftProcessor : public ::apache::thrift::TDispatchProcessor {
 public:
-  explicit pancake_thriftProcessor(::apache::thrift::stdcxx::shared_ptr<pancake_thriftIf> iface);
+  explicit pancake_thriftProcessor(std::shared_ptr<pancake_thriftIf> iface);
 
 protected:
   bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot,
@@ -149,7 +150,7 @@ protected:
                     void* callContext) override;
 
 private:
-  ::apache::thrift::stdcxx::shared_ptr<pancake_thriftIf> iface_;
+  std::shared_ptr<pancake_thriftIf> iface_;
   typedef void (pancake_thriftProcessor::*ProcessFunction)(int32_t,
       ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
   typedef std::map<std::string, ProcessFunction> ProcessMap;
