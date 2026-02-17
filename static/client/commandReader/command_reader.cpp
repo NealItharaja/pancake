@@ -30,7 +30,7 @@ int64_t command_reader::recv_response(std::vector<std::string>& out) {
 
     if (result.__isset.seq_id && result.__isset.result) {
         out = result.result;
-        return result.seq_id.client_seq_no;
+        return result.seq_id.seq;
     }
 
     return -1;
