@@ -17,6 +17,7 @@ void pancake_proxy::init(const std::vector<std::string> &keys, const std::vector
     }
 
     for (size_t i = 0; i < keys.size(); ++i) {
+        std::lock_guard<std::mutex> lock(storage_mutex_);
         storage_interface_->put(keys[i], values[i]);
     }
 }
@@ -26,18 +27,22 @@ void pancake_proxy::close() {
 }
 
 std::string pancake_proxy::get(const std::string &key) {
+    std::lock_guard<std::mutex> lock(storage_mutex_);
     auto result = storage_interface_->get(key);
     return result ? *result : std::string{};
 }
 
 void pancake_proxy::put(const std::string &key, const std::string &value) {
+    std::lock_guard<std::mutex> lock(storage_mutex_);
     storage_interface_->put(key, value);
 }
 
 std::vector<std::string> pancake_proxy::get_batch(const std::vector<std::string> &keys) {
+    std::lock_guard<std::mutex> lock(storage_mutex_);
     auto results = storage_interface_->get_batch(keys);
     std::vector<std::string> out;
     out.reserve(results.size());
+    
     for (const auto &r : results) {
         out.push_back(r ? *r : std::string{});
     }
@@ -45,6 +50,8 @@ std::vector<std::string> pancake_proxy::get_batch(const std::vector<std::string>
 }
 
 void pancake_proxy::put_batch(const std::vector<std::string> &keys, const std::vector<std::string> &values) {
+    std::lock_guard<std::mutex> lock(storage_mutex_);
+
     for (size_t i = 0; i < keys.size(); ++i) {
         storage_interface_->put(keys[i], values[i]);
     }

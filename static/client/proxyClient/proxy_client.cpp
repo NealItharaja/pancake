@@ -6,6 +6,8 @@ using apache::thrift::transport::TFramedTransport;
 
 void proxy_client::init(const std::string& host, int port) {
     auto socket = std::make_shared<TSocket>(host, port);
+    socket->setRecvTimeout(10000);
+    socket->setSendTimeout(10000);
     transport_ = std::make_shared<TFramedTransport>(socket);
     auto protocol = std::make_shared<TBinaryProtocol>(transport_);
     client_ = std::make_shared<pancake::pancake_thriftClient>(protocol);
