@@ -10,3 +10,4 @@ An implementation of the Pancake security system, with both static and dynamic d
 - `cmake`
 - `pkg-config`
 - `build-essential`
+- `parallel-hashmap
