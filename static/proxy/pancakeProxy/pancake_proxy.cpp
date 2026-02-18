@@ -3,21 +3,39 @@
 #include <stdexcept>
 #include "../../storage/redis/redis.h"
 
-void pancake_proxy::init(const std::vector<std::string> &keys, const std::vector<std::string> &values, void **args) {
-    finished_ = false;
+void pancake_proxy::ensure_primary_backend() {
+    if (storage_interface_) {
+        return;
+    }
+    
+    if (server_type_.empty() || server_type_ == "redis") {
+        auto redis = std::make_shared<redis_storage>();
+        redis->connect("127.0.0.1", 6379);
+        storage_interface_ = redis;
+        return;
+    }
+    throw std::runtime_error("unsupported backend type: " + server_type_);
+}
 
-    if (!storage_interface_) {
+storage_backend& pancake_proxy::thread_backend() {
+    thread_local std::shared_ptr<storage_backend> tls_backend;
+    if (!tls_backend) {
         if (server_type_.empty() || server_type_ == "redis") {
             auto redis = std::make_shared<redis_storage>();
             redis->connect("127.0.0.1", 6379);
-            storage_interface_ = redis;
+            tls_backend = redis;
         } else {
             throw std::runtime_error("unsupported backend type: " + server_type_);
         }
     }
+    return *tls_backend;
+}
+
+void pancake_proxy::init(const std::vector<std::string> &keys, const std::vector<std::string> &values, void **args) {
+    finished_ = false;
+    ensure_primary_backend();
 
     for (size_t i = 0; i < keys.size(); ++i) {
-        std::lock_guard<std::mutex> lock(storage_mutex_);
         storage_interface_->put(keys[i], values[i]);
     }
 }
@@ -27,19 +45,16 @@ void pancake_proxy::close() {
 }
 
 std::string pancake_proxy::get(const std::string &key) {
-    std::lock_guard<std::mutex> lock(storage_mutex_);
-    auto result = storage_interface_->get(key);
+    auto result = thread_backend().get(key);
     return result ? *result : std::string{};
 }
 
 void pancake_proxy::put(const std::string &key, const std::string &value) {
-    std::lock_guard<std::mutex> lock(storage_mutex_);
-    storage_interface_->put(key, value);
+    thread_backend().put(key, value);
 }
 
 std::vector<std::string> pancake_proxy::get_batch(const std::vector<std::string> &keys) {
-    std::lock_guard<std::mutex> lock(storage_mutex_);
-    auto results = storage_interface_->get_batch(keys);
+    auto results = thread_backend().get_batch(keys);
     std::vector<std::string> out;
     out.reserve(results.size());
     
@@ -50,11 +65,7 @@ std::vector<std::string> pancake_proxy::get_batch(const std::vector<std::string>
 }
 
 void pancake_proxy::put_batch(const std::vector<std::string> &keys, const std::vector<std::string> &values) {
-    std::lock_guard<std::mutex> lock(storage_mutex_);
-
-    for (size_t i = 0; i < keys.size(); ++i) {
-        storage_interface_->put(keys[i], values[i]);
-    }
+    thread_backend().put_batch(keys, values);
 }
 
 std::string pancake_proxy::get(int, const std::string &key) {

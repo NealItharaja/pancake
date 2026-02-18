@@ -5,7 +5,6 @@
 #include <vector>
 #include <memory>
 #include <future>
-#include <mutex>
 #include "../proxy.h"
 #include "../operation/operation.h"
 #include "../distribution/distribution.h"
@@ -48,8 +47,9 @@ public:
     int object_size_ = 0;
 
 private:
+    storage_backend& thread_backend();
+    void ensure_primary_backend();
     std::shared_ptr<storage_backend> storage_interface_;
-    mutable std::mutex storage_mutex_;
     update_cache update_cache_;
     std::unique_ptr<Distribution> real_distribution_;
     std::unique_ptr<Distribution> fake_distribution_;
