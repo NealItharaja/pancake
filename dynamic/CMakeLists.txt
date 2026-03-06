@@ -54,6 +54,7 @@ set(PROXY_INCLUDE
         ${CMAKE_SOURCE_DIR}/proxy/encryption
         ${CMAKE_SOURCE_DIR}/proxy/pancakeProxy
         ${CMAKE_SOURCE_DIR}/proxy/parallel-hashmap
+        ${CMAKE_SOURCE_DIR}/ks
 )
 
 set(STORAGE_INCLUDE
@@ -81,6 +82,7 @@ file(GLOB_RECURSE CLIENT_SOURCES client/*.cpp)
 file(GLOB_RECURSE SERVICE_SOURCES service/*.cpp)
 file(GLOB_RECURSE SERVER_SOURCES server/*.cpp)
 file(GLOB_RECURSE STORAGE_SOURCES storage/*.cpp)
+file(GLOB_RECURSE KS_SOURCES ks/*.cpp)
 file(GLOB_RECURSE TEST_SOURCES tests/*.cpp)
 
 # proxy_server.cpp is a standalone executable entrypoint (has main()).
@@ -95,6 +97,7 @@ add_executable(pancake_proxy_server
         ${SERVICE_SOURCES}
         ${SERVER_SOURCES}
         ${STORAGE_SOURCES}
+        ${KS_SOURCES}
 )
 
 target_include_directories(pancake_proxy_server PRIVATE
@@ -119,6 +122,7 @@ if (PANCAKE_BUILD_SERVICE_PROXY_SERVER)
     add_executable(pancake_service_proxy_server
             ${SERVICE_STANDALONE_SOURCES}
             ${SERVICE_SOURCES}
+            ${KS_SOURCES}
     )
     target_include_directories(pancake_service_proxy_server PRIVATE
             ${SERVICE_INCLUDE}
@@ -162,12 +166,31 @@ if (PANCAKE_BUILD_BENCHMARK)
     add_dependencies(benchmark pancake_thrift_codegen)
 endif()
 
+option(PANCAKE_BUILD_DYNAMIC_KS_BENCHMARK "Build dynamic KS detection benchmark" OFF)
+if (PANCAKE_BUILD_DYNAMIC_KS_BENCHMARK)
+    add_executable(dynamic_ks_benchmark
+            benchmark/dynamic_ks_benchmark.cpp
+            ks/benchmark.cpp
+            ks/histogram_distribution.cpp
+            ks/sliding_window_distribution.cpp
+            ks/statistical_test.cpp
+            ks/zipf_generator.cpp
+    )
+    target_include_directories(dynamic_ks_benchmark PRIVATE
+            ${PROXY_INCLUDE}
+    )
+    target_link_libraries(dynamic_ks_benchmark PRIVATE
+            Threads::Threads
+    )
+endif()
+
 macro(add_pancake_test target_name test_source)
     add_executable(${target_name}
             ${test_source}
             ${PROXY_SOURCES}
             ${SERVICE_SOURCES}
             ${STORAGE_SOURCES}
+            ${KS_SOURCES}
     )
     target_include_directories(${target_name} PRIVATE
             ${PROXY_INCLUDE}
