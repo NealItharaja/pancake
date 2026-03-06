@@ -5,6 +5,8 @@
 #include <vector>
 #include <memory>
 #include <future>
+#include <unordered_map>
+#include <mutex>
 #include "../proxy.h"
 #include "../operation/operation.h"
 #include "../distribution/distribution.h"
@@ -12,6 +14,8 @@
 #include "../queue/queue.h"
 #include "../util/random.h"
 #include "../encryption/encryption.h"
+#include "../../ks/histogram_distribution.h"
+#include "../../ks/sliding_window_distribution.h"
 #include "../../storage/interface.h"
 #include "../../service/proxy_types.h"
 
@@ -47,6 +51,7 @@ public:
     int object_size_ = 0;
 
 private:
+    void observe_access(const std::string& key);
     storage_backend& thread_backend();
     void ensure_primary_backend();
     std::shared_ptr<storage_backend> storage_interface_;
@@ -54,6 +59,11 @@ private:
     std::unique_ptr<Distribution> real_distribution_;
     std::unique_ptr<Distribution> fake_distribution_;
     encryption_engine encryption_engine_;
+    std::unordered_map<std::string, size_t> key_index_;
+    std::unique_ptr<ks::SlidingWindowDistribution> sliding_histogram_;
+    ks::HistogramDistribution reference_histogram_;
+    std::mutex dynamic_state_mutex_;
+    size_t observe_counter_ = 0;
     bool finished_ = false;
 };
 

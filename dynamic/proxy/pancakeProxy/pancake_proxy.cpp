@@ -1,7 +1,42 @@
 #include "pancake_proxy.h"
 #include <parallel_hashmap/phmap.h>
+#include <algorithm>
 #include <stdexcept>
+#include <iostream>
+#include "../../ks/statistical_test.h"
 #include "../../storage/redis/redis.h"
+
+void pancake_proxy::observe_access(const std::string& key) {
+    auto it = key_index_.find(key);
+
+    if (it == key_index_.end()) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(dynamic_state_mutex_);
+    if (!sliding_histogram_) {
+        return;
+    }
+
+    sliding_histogram_->observe(it->second);
+    observe_counter_++;
+
+    if (observe_counter_ % 1024 != 0) {
+        return;
+    }
+
+    if (sliding_histogram_->size() < sliding_histogram_->window_size()) {
+        return;
+    }
+
+    const double ks = ks::StatisticalTest::ks_statistic(reference_histogram_, sliding_histogram_->histogram());
+    const double threshold = ks::StatisticalTest::threshold(sliding_histogram_->window_size(), 0.05);
+
+    if (ks > threshold) {
+        std::cerr << "[dynamic][ks] distribution change detected: ks=" << ks << " threshold=" << threshold << "\n";
+        reference_histogram_ = sliding_histogram_->snapshot();
+    }
+}
 
 void pancake_proxy::ensure_primary_backend() {
     if (storage_interface_) {
@@ -35,6 +70,28 @@ void pancake_proxy::init(const std::vector<std::string> &keys, const std::vector
     finished_ = false;
     ensure_primary_backend();
 
+    if (keys.empty()) {
+        throw std::runtime_error("proxy init received empty key domain");
+    }
+
+    key_index_.clear();
+    key_index_.reserve(keys.size());
+
+    for (size_t i = 0; i < keys.size(); ++i) {
+        key_index_.emplace(keys[i], i);
+    }
+
+    const size_t window_size = std::max<size_t>(1024, keys.size());
+    sliding_histogram_ = std::make_unique<ks::SlidingWindowDistribution>(window_size, keys.size());
+    reference_histogram_ = ks::HistogramDistribution(keys.size());
+
+    for (size_t i = 0; i < window_size; ++i) {
+        sliding_histogram_->observe(i % keys.size());
+    }
+
+    reference_histogram_ = sliding_histogram_->snapshot();
+    observe_counter_ = 0;
+
     for (size_t i = 0; i < keys.size(); ++i) {
         storage_interface_->put(keys[i], values[i]);
     }
@@ -45,15 +102,21 @@ void pancake_proxy::close() {
 }
 
 std::string pancake_proxy::get(const std::string &key) {
+    observe_access(key);
     auto result = thread_backend().get(key);
     return result ? *result : std::string{};
 }
 
 void pancake_proxy::put(const std::string &key, const std::string &value) {
+    observe_access(key);
     thread_backend().put(key, value);
 }
 
 std::vector<std::string> pancake_proxy::get_batch(const std::vector<std::string> &keys) {
+    for (const auto& key : keys) {
+        observe_access(key);
+    }
+
     auto results = thread_backend().get_batch(keys);
     std::vector<std::string> out;
     out.reserve(results.size());
@@ -65,6 +128,10 @@ std::vector<std::string> pancake_proxy::get_batch(const std::vector<std::string>
 }
 
 void pancake_proxy::put_batch(const std::vector<std::string> &keys, const std::vector<std::string> &values) {
+    for (const auto& key : keys) {
+        observe_access(key);
+    }
+    
     thread_backend().put_batch(keys, values);
 }
 
