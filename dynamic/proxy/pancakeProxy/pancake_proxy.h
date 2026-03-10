@@ -9,7 +9,6 @@
 #include <mutex>
 #include "../proxy.h"
 #include "../operation/operation.h"
-#include "../distribution/distribution.h"
 #include "../updateCache/updateCache.h"
 #include "../queue/queue.h"
 #include "../util/random.h"
@@ -56,8 +55,6 @@ private:
     void ensure_primary_backend();
     std::shared_ptr<storage_backend> storage_interface_;
     update_cache update_cache_;
-    std::unique_ptr<Distribution> real_distribution_;
-    std::unique_ptr<Distribution> fake_distribution_;
     encryption_engine encryption_engine_;
     std::unordered_map<std::string, size_t> key_index_;
     std::unique_ptr<ks::SlidingWindowDistribution> sliding_histogram_;
