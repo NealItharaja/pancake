@@ -15,7 +15,6 @@
 #include <chrono>
 #include <cstring>
 #include "timer.h"
-#include "distribution.h"
 #include "proxy_client.h"
 #include "../service/thrift_utils.h"
 

@@ -50,7 +50,6 @@ set(PROXY_INCLUDE
         ${CMAKE_SOURCE_DIR}/proxy/updateCache
         ${CMAKE_SOURCE_DIR}/proxy/queue
         ${CMAKE_SOURCE_DIR}/proxy/util
-        ${CMAKE_SOURCE_DIR}/proxy/distribution
         ${CMAKE_SOURCE_DIR}/proxy/encryption
         ${CMAKE_SOURCE_DIR}/proxy/pancakeProxy
         ${CMAKE_SOURCE_DIR}/proxy/parallel-hashmap

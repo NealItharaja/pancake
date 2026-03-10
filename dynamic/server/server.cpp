@@ -13,7 +13,6 @@
 #include <unistd.h>
 #endif
 
-#include "distribution.h"
 #include "pancake_proxy.h"
 #include "../proxy/thrift_server.h"
 #include "../service/thrift_utils.h"
@@ -23,9 +22,8 @@
 
 using trace_vector = std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>;
 
-Distribution load_trace(const std::string& trace_path, trace_vector& trace, int batch_size) {
+std::vector<std::string> load_trace(const std::string& trace_path, trace_vector& trace, int batch_size) {
     phmap::flat_hash_map<std::string, int> freq;
-    int total = 0;
     std::ifstream in(trace_path);
 
     if (!in.is_open()) {
@@ -66,7 +64,6 @@ Distribution load_trace(const std::string& trace_path, trace_vector& trace, int 
             }
         }
         freq[key]++;
-        total++;
     }
 
     if (!get_keys.empty()) {
@@ -77,13 +74,11 @@ Distribution load_trace(const std::string& trace_path, trace_vector& trace, int 
     }
 
     std::vector<std::string> keys;
-    std::vector<double> weights;
-
+    keys.reserve(freq.size());
     for (auto& [k, v] : freq) {
         keys.push_back(k);
-        weights.push_back(static_cast<double>(v) / total);
     }
-    return Distribution(keys, weights);
+    return keys;
 }
 
 
@@ -134,12 +129,11 @@ int main(int argc, char** argv) {
 
     assert(!proxy->trace_location_.empty());
     trace_vector trace;
-    auto dist = load_trace(proxy->trace_location_, trace, client_batch);
-    auto items = dist.get_items();
+    auto items = load_trace(proxy->trace_location_, trace, client_batch);
     double alpha = 1.0 / items.size();
     double delta = 1.0 / (2 * items.size()) * 1 / alpha;
     auto response_map = std::make_shared<thrift_response_client_map>();
-    void* args[4] = {&dist, &alpha, &delta, &response_map};
+    void* args[4] = {nullptr, &alpha, &delta, &response_map};
     std::string dummy(value_size, '0');
     std::cout << "Initializing proxy...\n";
     proxy->init(items, std::vector<std::string>(items.size(), dummy), args);
