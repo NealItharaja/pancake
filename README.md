@@ -26,7 +26,13 @@ cmake --build . -j"$(nproc)"
 4. Run benchmark on seperate window (ex: ./bin/benchmark -h 127.0.0.1 -p 9090 -t /tmp/pancake_traces/ycsb_a_1m.trace -n 8 -b 50 -o ./data)
 
 ## Required Traces & Commands:
-In order to start the proxy server, follow the format below: 
+In order to start the proxy server, first start redis-server:
+```courseignore
+redis-server --daemonize yes
+redis-cli ping //Should output PONG
+```
+
+Then, start the server using the following command:
 ```linux
 ./bin/pancake_proxy_server \
   -h <HOST> \
