@@ -41,6 +41,17 @@ bool update_cache::replica_needs_update(const std::string& key, size_t replica_i
     return mask[replica_id] != 0;
 }
 
+bool update_cache::try_get_value(const std::string& key, std::string& out_value) const {
+    std::shared_lock lock(mutex_);
+    auto it = table_.find(key);
+
+    if (it == table_.end()) {
+        return false;
+    }
+    out_value = it->second.value;
+    return true;
+}
+
 void update_cache::clear_replica(const std::string& key, size_t replica_id) {
     std::unique_lock lock(mutex_);
     auto it = table_.find(key);
@@ -53,6 +64,18 @@ void update_cache::clear_replica(const std::string& key, size_t replica_id) {
 
     if (replica_id < mask.size()) {
         mask[replica_id] = 0;
+    }
+
+    bool any_pending = false;
+    for (uint8_t bit : mask) {
+        if (bit != 0) {
+            any_pending = true;
+            break;
+        }
+    }
+    
+    if (!any_pending) {
+        table_.erase(it);
     }
 }
 

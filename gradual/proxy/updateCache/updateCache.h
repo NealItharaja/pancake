@@ -9,6 +9,7 @@ public:
     explicit update_cache(size_t initial_replicas = 0);
     void mark_update(const std::string& key, const std::string& value, size_t num_replicas);
     bool replica_needs_update(const std::string& key, size_t replica_id) const;
+    bool try_get_value(const std::string& key, std::string& out_value) const;
     void clear_replica(const std::string& key, size_t replica_id);
     void resize_replicas(const std::string& key, size_t new_size);
     int choose_replica(const std::string& key, size_t num_replicas, int frequency, double p_max) const;

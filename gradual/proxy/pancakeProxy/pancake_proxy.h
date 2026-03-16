@@ -6,7 +6,10 @@
 #include <memory>
 #include <future>
 #include <unordered_map>
+#include <unordered_set>
 #include <mutex>
+#include <random>
+#include <utility>
 #include "../proxy.h"
 #include "../operation/operation.h"
 #include "../updateCache/updateCache.h"
@@ -50,15 +53,43 @@ public:
     int object_size_ = 0;
 
 private:
-    void observe_access(const std::string& key);
+    struct ReplicaSlot {
+        size_t key_index = 0;
+        size_t replica_id = 0;
+    };
+
+    std::string replica_label(const std::string& key, size_t replica_id) const;
+    void observe_access(storage_backend& backend, const std::string& key);
+    void maybe_run_detection_and_adapt_locked(storage_backend& backend);
+    void apply_replica_plan_locked(storage_backend& backend, const std::vector<size_t>& new_replicas);
+    std::pair<size_t, size_t> sample_fake_access_locked();
+    std::pair<size_t, size_t> sample_real_access_locked();
+    void opportunistic_propagate_locked(size_t key_index, size_t replica_id, std::vector<std::pair<std::string, std::string>>& staged_writes);
+    std::string read_real_value(storage_backend& backend, size_t key_index, size_t replica_id);
+    void run_cover_batch(storage_backend& backend);
     storage_backend& thread_backend();
     void ensure_primary_backend();
     std::shared_ptr<storage_backend> storage_interface_;
     update_cache update_cache_;
     encryption_engine encryption_engine_;
     std::unordered_map<std::string, size_t> key_index_;
+    std::vector<std::string> keys_;
+    std::vector<size_t> replicas_per_key_;
+    std::vector<double> fake_mass_per_key_;
+    std::vector<double> fake_cdf_;
+    std::vector<double> real_cdf_;
+    std::vector<size_t> old_replicas_per_key_;
+    std::vector<ReplicaSlot> gain_slots_;
+    std::vector<ReplicaSlot> lose_slots_;
+    std::unordered_map<std::string, ReplicaSlot> lose_to_gain_slot_;
+    std::unordered_set<std::string> pending_gain_labels_;
+    bool transition_active_ = false;
+    double alpha_threshold_ = 0.0;
+    double delta_real_probability_ = 0.5;
+    int security_batch_size_effective_ = 3;
     std::unique_ptr<ad::SlidingWindowDistribution> sliding_histogram_;
     ad::HistogramDistribution reference_histogram_;
+    std::mt19937 rng_{std::random_device{}()};
     std::mutex dynamic_state_mutex_;
     size_t observe_counter_ = 0;
     bool finished_ = false;

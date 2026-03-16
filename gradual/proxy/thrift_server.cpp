@@ -3,6 +3,7 @@
 #include "pancakeProxy/pancake_proxy.h"
 #include "../service/thrift.h"
 #include "../service/thrift_helpers.h"
+#include <algorithm>
 #include <thrift/server/TThreadedServer.h>
 
 class ProxyThriftHandler : public pancake_thriftIf {
@@ -53,11 +54,13 @@ private:
     std::shared_ptr<pancake_proxy> proxy_instance_;
 };
 
-std::shared_ptr<apache::thrift::server::TThreadedServer> thrift_server::create(std::shared_ptr<proxy> proxy_instance, const std::string&, std::shared_ptr<thrift_response_client_map>, int port, int) {
+std::shared_ptr<apache::thrift::server::TThreadedServer> thrift_server::create(std::shared_ptr<proxy> proxy_instance, const std::string&, std::shared_ptr<thrift_response_client_map>, int port, int threads) {
     auto handler = std::make_shared<ProxyThriftHandler>(proxy_instance);
     auto processor = std::make_shared<pancake_thriftProcessor>(handler);
     auto serverTransport = thrift_helpers::make_server_socket(port);
     auto transportFactory = thrift_helpers::make_framed_factory();
     auto protocolFactory = thrift_helpers::make_binary_factory();
-    return std::make_shared<apache::thrift::server::TThreadedServer>(processor, serverTransport, transportFactory, protocolFactory);
+    auto server = std::make_shared<apache::thrift::server::TThreadedServer>(processor, serverTransport, transportFactory, protocolFactory);
+    server->setConcurrentClientLimit(std::max(1, threads));
+    return server;
 }

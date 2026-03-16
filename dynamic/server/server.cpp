@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -83,16 +84,17 @@ std::vector<std::string> load_trace(const std::string& trace_path, trace_vector&
 
 
 void usage() {
-    std::cout << "Pancake proxy server\n" << "  -h host\n" << "  -p port\n" << "  -s backend type\n" << "  -n backend count\n" << "  -l workload file\n" << "  -b security batch size\n" << "  -c storage batch size\n" << "  -v value size\n" << "  -q client batch size\n";
+    std::cout << "Pancake proxy server\n" << "  -h host\n" << "  -p port\n" << "  -s backend type\n" << "  -n backend count\n" << "  -t proxy threads\n" << "  -l workload file\n" << "  -b security batch size\n" << "  -c storage batch size\n" << "  -v value size\n" << "  -q client batch size\n";
 }
 
 int main(int argc, char** argv) {
     int client_batch = 50;
     int value_size = 1000;
+    int proxy_threads = 8;
     auto proxy = std::make_shared<pancake_proxy>();
     int opt;
 
-    while ((opt = getopt(argc, argv, "h:p:s:n:l:b:c:v:q:")) != -1) {
+    while ((opt = getopt(argc, argv, "h:p:s:n:t:l:b:c:v:q:")) != -1) {
         switch (opt) {
             case 'h':
                 proxy->server_host_name_ = optarg;
@@ -105,6 +107,9 @@ int main(int argc, char** argv) {
                 break;
             case 'n':
                 proxy->server_count_ = std::atoi(optarg);
+                break;
+            case 't':
+                proxy_threads = std::max(1, std::atoi(optarg));
                 break;
             case 'l':
                 proxy->trace_location_ = optarg;
@@ -138,7 +143,7 @@ int main(int argc, char** argv) {
     std::cout << "Initializing proxy...\n";
     proxy->init(items, std::vector<std::string>(items.size(), dummy), args);
     std::cout << "Proxy initialized\n";
-    auto server = thrift_server::create(proxy, "pancake", response_map, PROXY_PORT, 1);
+    auto server = thrift_server::create(proxy, "pancake", response_map, PROXY_PORT, proxy_threads);
     std::thread server_thread([&] { server->serve(); });
     wait_for_server_start(HOST, PROXY_PORT);
     std::cout << "Proxy server running\n";
