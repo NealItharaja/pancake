@@ -61,14 +61,44 @@ redisReply* redis_storage::cmd(const char* fmt, ...) {
     va_end(args);
 
     if (!reply) {
-        throw runtime_error("failed to redisv command");
+        throw runtime_error(ctx && ctx->err ? ctx->errstr : "failed to redisv command");
     }
 
     return static_cast<redisReply*>(reply);
 }
 
+redisReply* redis_storage::cmd_argv(const vector<string>& parts) {
+    if (!ctx) {
+        throw runtime_error("redis not connected");
+    }
+    if (parts.empty()) {
+        throw runtime_error("empty redis command");
+    }
+
+    vector<const char*> argv;
+    vector<size_t> argvlen;
+    argv.reserve(parts.size());
+    argvlen.reserve(parts.size());
+
+    for (const auto& p : parts) {
+        argv.push_back(p.data());
+        argvlen.push_back(p.size());
+    }
+
+    void* reply = redisCommandArgv(
+        ctx,
+        static_cast<int>(argv.size()),
+        argv.data(),
+        argvlen.data());
+
+    if (!reply) {
+        throw runtime_error(ctx && ctx->err ? ctx->errstr : "failed to redisCommandArgv");
+    }
+    return static_cast<redisReply*>(reply);
+}
+
 void redis_storage::put(const string& key, const string& value) {
-    redisReply* reply = cmd("SET %b %b", key.data(), key.size(), value.data(), value.size());
+    redisReply* reply = cmd_argv({"SET", key, value});
 
     if (reply->type == REDIS_REPLY_ERROR) {
         string msg = reply->str;
@@ -80,7 +110,7 @@ void redis_storage::put(const string& key, const string& value) {
 }
 
 optional<string> redis_storage::get(const string& key) {
-    redisReply* reply = cmd("GET %b", key.data(), key.size());
+    redisReply* reply = cmd_argv({"GET", key});
 
     if (reply->type == REDIS_REPLY_NIL) {
         freeReplyObject(reply);
@@ -118,7 +148,7 @@ void redis_storage::put_batch(const vector<string>& keys, const vector<string>& 
     }
 
     for (size_t i = 0; i < keys.size(); i++) {
-        redisReply* r = cmd("SET %b %b", keys[i].data(), keys[i].size(), values[i].data(), values[i].size());
+        redisReply* r = cmd_argv({"SET", keys[i], values[i]});
 
         if (r->type == REDIS_REPLY_ERROR) {
             freeReplyObject(r);
@@ -139,7 +169,7 @@ vector<string> redis_storage::keysScan(const string& key, size_t count) {
     string pattern = key + "*";
 
     while (true) {
-		redisReply* reply = cmd("SCAN %s MATCH %b COUNT %lu", cursor.c_str(), pattern.data(), pattern.size(), (unsigned long)count);
+		redisReply* reply = cmd_argv({"SCAN", cursor, "MATCH", pattern, "COUNT", std::to_string(count)});
 
         if (reply->type != REDIS_REPLY_ARRAY || reply->elements != 2) {
             freeReplyObject(reply);
@@ -177,7 +207,7 @@ vector<string> redis_storage::keysScan(const string& key, size_t count) {
 }
 
 bool redis_storage::exists(const string& key) {
-    redisReply* reply = cmd("EXISTS %b", key.data(), key.size());
+    redisReply* reply = cmd_argv({"EXISTS", key});
 
     if (reply->type != REDIS_REPLY_INTEGER) {
         freeReplyObject(reply);
