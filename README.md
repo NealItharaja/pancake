@@ -1,5 +1,5 @@
 # pancake
-An implementation of the Pancake security system, with both static, dynamic and gradual distributions.
+An implementation of the Pancake security system, with both static, dynamic and gradual distributions. The major additions in this project are the dynamic and gradual implementations, which detect active changes in the access frequency distributions by using the Kolmogorov-Smirnov (KS) and the Anderson-Darling (AD) statistical tests, respectively. Thus, unlike in previous iterations, this implementation now is able to apply Pancake's novel access frequency smoothing techniques on both distributions that change suddenly (through the KS test), and those that change more gradually (through the AD test). 
 
 ## Requirements
 - `libcrypto++-dev`
