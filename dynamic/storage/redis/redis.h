@@ -30,5 +30,6 @@ public:
 private:
     redisContext* ctx = nullptr;
     redisReply* cmd(const char* fmt, ...);
+    redisReply* cmd_argv(const vector<string>& parts);
 };
 #endif // PANCAKE_REDIS_H
