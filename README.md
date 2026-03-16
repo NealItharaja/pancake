@@ -10,7 +10,7 @@ An implementation of the Pancake security system, with both static, dynamic and 
 - `cmake`
 - `pkg-config`
 - `build-essential`
-- `parallel-hashmap` - https://github.com/greg7mdp/parallel-hashmap 
+- `parallel-hashmap` - https://github.com/greg7mdp/parallel-hashmap (Note: ensure this repo is within the proxy folders within each implementation folder)
 
 ## Steps to Run:
 1. Create cmakebuild folder (mkdir cmakebuild) & enter it
