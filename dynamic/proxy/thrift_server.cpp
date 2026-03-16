@@ -4,6 +4,7 @@
 #include "../service/thrift.h"
 #include "../service/thrift_helpers.h"
 #include <algorithm>
+#include <iostream>
 #include <thrift/server/TThreadedServer.h>
 
 class ProxyThriftHandler : public pancake_thriftIf {
@@ -19,26 +20,44 @@ public:
     void register_client_id(const int32_t, const int64_t) override { }
 
     void get(std::string& _return, const std::string& key) override {
-        if (proxy_instance_) {
-            _return = proxy_instance_->get(key);
+        try {
+            if (proxy_instance_) {
+                _return = proxy_instance_->get(key);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[thrift][get] " << e.what() << "\n";
+            _return.clear();
         }
     }
 
     void put(const std::string& key, const std::string& value) override {
-        if (proxy_instance_) {
-            proxy_instance_->put(key, value);
+        try {
+            if (proxy_instance_) {
+                proxy_instance_->put(key, value);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[thrift][put] " << e.what() << "\n";
         }
     }
 
     void get_batch(std::vector<std::string>& _return, const std::vector<std::string>& keys) override {
-        if (proxy_instance_) {
-            _return = proxy_instance_->get_batch(keys);
+        try {
+            if (proxy_instance_) {
+                _return = proxy_instance_->get_batch(keys);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[thrift][get_batch] " << e.what() << "\n";
+            _return.clear();
         }
     }
 
     void put_batch(const std::vector<std::string>& keys, const std::vector<std::string>& values) override {
-        if (proxy_instance_) {
-            proxy_instance_->put_batch(keys, values);
+        try {
+            if (proxy_instance_) {
+                proxy_instance_->put_batch(keys, values);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "[thrift][put_batch] " << e.what() << "\n";
         }
     }
 
