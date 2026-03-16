@@ -15,9 +15,13 @@ An implementation of the Pancake security system, with both static, dynamic and 
 ## Steps to Run:
 1. Create cmakebuild folder (mkdir cmakebuild) & enter it
 
-2. Run cmake (cmake .. -DPANCAKE_BUILD_BENCHMARK=ON & cmake --build . -j"$(nproc)")
+2. Run cmake using the following lines:
+```courseignore
+cmake .. -DPANCAKE_BUILD_BENCHMARK=ON
+cmake --build . -j"$(nproc)"
+```
 
-3. Start proxy server within cmakebuild (ex: ./bin/pancake_proxy_server -h 127.0.0.1 -p 9090 -s redis -n 1 -l /tmp/pancake_traces/ycsb_a_1m.trace -b 50 -c 50 -v 128 -q 50)
+3. Start proxy server within cmakebuild (ex: ./bin/pancake_proxy_server \ -h 127.0.0.1 \ -p 9090 \ -s redis \ -n 1 \ -t 32 \ -l /tmp/pancake_traces/ycsb_a_1m.trace \ -b 3 \ -c 50 \ -v 128 \ -q 50)
 
 4. Run benchmark on seperate window (ex: ./bin/benchmark -h 127.0.0.1 -p 9090 -t /tmp/pancake_traces/ycsb_a_1m.trace -n 8 -b 50 -o ./data)
 
@@ -29,6 +33,7 @@ In order to start the proxy server, follow the format below:
   -p <PORT> \
   -s <BACKEND_TYPE> \
   -n <BACKEND_COUNT> \
+  -t <NUM_PROXY_THREADS> \
   -l <WORKLOAD_FILE> \
   -b <SECURITY_BATCH_SIZE> \
   -c <STORAGE_BATCH_SIZE> \
