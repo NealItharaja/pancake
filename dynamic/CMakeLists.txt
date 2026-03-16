@@ -4,6 +4,7 @@ project(pancake LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+include(FetchContent)
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
     message(FATAL_ERROR "In-source builds are not allowed. Use: mkdir cmakebuild && cd cmakebuild && cmake ..")
@@ -21,6 +22,21 @@ pkg_check_modules(HIREDIS REQUIRED hiredis)
 
 find_library(CRYPTOPP_LIB cryptopp REQUIRED)
 find_program(THRIFT_COMPILER thrift REQUIRED)
+
+set(PARALLEL_HASHMAP_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/proxy/parallel-hashmap")
+if (NOT EXISTS "${PARALLEL_HASHMAP_INCLUDE_DIR}/parallel_hashmap/phmap.h")
+    message(STATUS "parallel-hashmap not found locally, fetching via CMake FetchContent")
+    FetchContent_Declare(
+            parallel_hashmap
+            GIT_REPOSITORY https://github.com/greg7mdp/parallel-hashmap.git
+            GIT_TAG master
+    )
+    FetchContent_GetProperties(parallel_hashmap)
+    if (NOT parallel_hashmap_POPULATED)
+        FetchContent_Populate(parallel_hashmap)
+    endif()
+    set(PARALLEL_HASHMAP_INCLUDE_DIR "${parallel_hashmap_SOURCE_DIR}")
+endif()
 
 set(THRIFT_IDL "${CMAKE_SOURCE_DIR}/thrift/pancake.thrift")
 set(THRIFT_GEN_DIR "${CMAKE_BINARY_DIR}/gen-cpp")
@@ -52,7 +68,7 @@ set(PROXY_INCLUDE
         ${CMAKE_SOURCE_DIR}/proxy/util
         ${CMAKE_SOURCE_DIR}/proxy/encryption
         ${CMAKE_SOURCE_DIR}/proxy/pancakeProxy
-        ${CMAKE_SOURCE_DIR}/proxy/parallel-hashmap
+        ${PARALLEL_HASHMAP_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/ks
 )
 
